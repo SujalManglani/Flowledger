@@ -44,6 +44,10 @@ A modern finance dashboard built using Vue.js with role-based access, interactiv
 - Chart.js
 - CSS (Glassmorphism + Animations)
 
+----
+live demo link: https://flowledger-one.vercel.app/
+github repo link: https://github.com/SujalManglani/Flowledger.git
+
 ---
 🔑 How to Use
 Select role from sidebar:
@@ -62,8 +66,8 @@ Screenshots
 <img width="1893" height="864" alt="dashboard" src="https://github.com/user-attachments/assets/508cadb3-7ce2-4261-b4d2-c52519f56fbd" />
 <img width="1897" height="864" alt="piechart" src="https://github.com/user-attachments/assets/afebbabd-31c0-4ad7-b0fe-d504d88e68cd" />
 
------
-live demo link
+
+
 
 
 
