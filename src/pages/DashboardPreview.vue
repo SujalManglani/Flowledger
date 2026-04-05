@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 
 import CategoryChart from "../components/dashboard/CategoryChart.vue";
 import WaveChart from "../components/dashboard/WaveChart.vue";
@@ -8,11 +8,21 @@ import TransactionList from "../components/transactions/TransactionList.vue";
 import Ticker from "../components/Ticker.vue";
 import logo from "../assets/logo.png";
 
-/* DATA */
-const transactions = ref([
-  { id: 1, title: "Groceries", amount: 500, category: "Food", date: "2026-04-05" },
-  { id: 2, title: "Taxi", amount: 200, category: "Travel", date: "2026-04-04" }
-]);
+/* LOCAL STORAGE */
+const saved = localStorage.getItem("transactions");
+
+const transactions = ref(
+  saved
+    ? JSON.parse(saved)
+    : [
+        { id: 1, title: "Groceries", amount: 500, category: "Food", date: "2026-04-05" },
+        { id: 2, title: "Taxi", amount: 200, category: "Travel", date: "2026-04-04" }
+      ]
+);
+
+watch(transactions, (val) => {
+  localStorage.setItem("transactions", JSON.stringify(val));
+}, { deep: true });
 
 const addTransaction = (tx) => transactions.value.push(tx);
 const deleteTransaction = (id) => {
@@ -26,11 +36,58 @@ const total = computed(() =>
 /* ROLE */
 const role = ref("admin");
 
+/* FILTERS */
+const selectedCategory = ref("All");
+const searchQuery = ref("");
+const sortOption = ref("latest");
+const fromDate = ref("");
+const toDate = ref("");
+
+const filteredTransactions = computed(() => {
+  let data = [...transactions.value];
+
+  if (selectedCategory.value !== "All") {
+    data = data.filter(t => t.category === selectedCategory.value);
+  }
+
+  if (searchQuery.value) {
+    data = data.filter(t =>
+      t.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  }
+
+  if (fromDate.value) {
+    data = data.filter(t => new Date(t.date) >= new Date(fromDate.value));
+  }
+
+  if (toDate.value) {
+    data = data.filter(t => new Date(t.date) <= new Date(toDate.value));
+  }
+
+  if (sortOption.value === "amount") {
+    data.sort((a, b) => b.amount - a.amount);
+  } else {
+    data.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }
+
+  return data;
+});
+
+const categories = computed(() => [
+  "All",
+  ...new Set(transactions.value.map(t => t.category))
+]);
+
+const topCategory = computed(() => {
+  const map = {};
+  transactions.value.forEach(t => {
+    map[t.category] = (map[t.category] || 0) + t.amount;
+  });
+  return Object.keys(map).reduce((a, b) => (map[a] > map[b] ? a : b), "None");
+});
+
 /* COUNTER */
 const animatedTotal = ref(0);
-
-/* PARALLAX */
-const offset = ref(0);
 
 onMounted(() => {
   let start = 0;
@@ -46,24 +103,7 @@ onMounted(() => {
     }
   }, 25);
 
-  const dashboard = document.querySelector(".dashboard");
-
-  if (dashboard) {
-    dashboard.addEventListener("scroll", () => {
-      offset.value = dashboard.scrollTop;
-    });
-  }
-
-  const cards = document.querySelectorAll(".card");
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) entry.target.classList.add("show");
-    });
-  });
-
-  cards.forEach((c) => observer.observe(c));
-
+  /* CURSOR GLOW */
   window.addEventListener("mousemove", (e) => {
     const glow = document.querySelector(".cursor-glow");
     if (glow) {
@@ -72,254 +112,233 @@ onMounted(() => {
     }
   });
 });
-</script><template>
-<div class="app">  <div class="cursor-glow"></div>  <div class="sidebar glass">
-    <div class="logo">F</div><select v-model="role" class="role-select">
-  <option value="admin">Admin</option>
-  <option value="viewer">Viewer</option>
-</select>
+</script>
 
-  </div>  <div class="dashboard"><div
-  class="parallax-bg"
-  :style="{ transform: `translateY(${offset * 0.2}px)` }"
-></div>
+<template>
+<div class="app">
 
-<div class="header glass">
-  <div class="title">
-    <img :src="logo" class="logo-img" />
-    <h1>Flowledger</h1>
+  <div class="cursor-glow"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar glass">
+    <div class="logo">F</div>
+
+    <select v-model="role" class="role-select">
+      <option value="admin">Admin</option>
+      <option value="viewer">Viewer</option>
+    </select>
   </div>
 
-  <div class="nav-buttons">
-    <button>Home</button>
-    <button>Reports</button>
-    <button>Settings</button>
+  <div class="dashboard">
+
+    <!-- BACKGROUND -->
+    <div class="parallax-bg"></div>
+
+    <!-- HEADER -->
+    <div class="header glass fade-in">
+      <div class="title">
+        <img :src="logo" class="logo-img" />
+        <h1>Flowledger</h1>
+      </div>
+
+      <div class="nav-buttons">
+        <button>Home</button>
+        <button>Reports</button>
+        <button>Settings</button>
+      </div>
+    </div>
+
+    <div class="ticker fade-in">
+      <Ticker :transactions="transactions" />
+    </div>
+
+    <div class="topbar fade-in">
+      <div class="stat glass">₹{{ animatedTotal }}<p>Total</p></div>
+      <div class="stat glass">{{ transactions.length }}<p>Transactions</p></div>
+      <div class="stat glass">Active<p>Status</p></div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="card glass filter-bar fade-in">
+      <input v-model="searchQuery" placeholder="Search..." />
+      <select v-model="selectedCategory">
+        <option v-for="cat in categories" :key="cat">{{ cat }}</option>
+      </select>
+      <select v-model="sortOption">
+        <option value="latest">Latest</option>
+        <option value="amount">Highest Amount</option>
+      </select>
+      <input type="date" v-model="fromDate" />
+      <input type="date" v-model="toDate" />
+    </div>
+
+    <div class="content">
+
+      <div class="left">
+        <div class="card glass fade-in">
+          <h3>📊 Insights</h3>
+          <p>Top Category: {{ topCategory }}</p>
+          <p>Total Spent: ₹{{ total }}</p>
+        </div>
+      </div>
+
+      <div class="center">
+        <div class="card glass fade-in">
+          <WaveChart :transactions="transactions" />
+        </div>
+
+        <div class="card glass fade-in">
+          <TransactionList
+            :transactions="filteredTransactions"
+            :role="role"
+            @delete="deleteTransaction"
+          />
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="card glass fade-in">
+          <CategoryChart :transactions="transactions" />
+        </div>
+
+        <div class="card glass fade-in" v-show="role === 'admin'">
+          <AddTransactionForm @add="addTransaction" />
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
+</template>
 
-<div class="ticker">
-  <Ticker :transactions="transactions" />
-</div>
-
-<div class="topbar">
-  <div class="stat big">₹{{ animatedTotal }}<p>Total</p></div>
-  <div class="stat">{{ transactions.length }}<p>Transactions</p></div>
-  <div class="stat">Active<p>Status</p></div>
-</div>
-
-<div class="content">
-
-  <div class="left">
-    <div class="card glow-card">
-      <h3>📊 Market</h3>
-      <p>📈 NIFTY +1.2%</p>
-      <p>📈 SENSEX +0.8%</p>
-      <p>🪙 BTC ₹58L</p>
-    </div>
-
-    <div class="card glow-card">
-      <h3>🔥 Top Movers</h3>
-      <p>🚀 HDFC ▲</p>
-      <p>🚀 INFY ▲</p>
-    </div>
-  </div>
-
-  <div class="center">
-    <div class="card hero">
-      <WaveChart :transactions="transactions" />
-    </div>
-
-    <div class="card list">
-      <TransactionList
-        :transactions="transactions"
-        :role="role"
-        @delete="deleteTransaction"
-      />
-    </div>
-  </div>
-
-  <div class="right">
-    <div class="card pie">
-      <CategoryChart :transactions="transactions" />
-    </div>
-
-    <!-- ✅ FIXED HERE -->
-    <div class="card form" v-show="role === 'admin'">
-      <AddTransactionForm @add="addTransaction" />
-    </div>
-  </div>
-
-</div>
-
-  </div>
-</div>
-</template><style scoped>
-
-/* SAME CSS — UNCHANGED */
-
+<style scoped>
 :global(body) {
   margin: 0;
   background: #020617;
   color: #e5e7eb;
-  font-family: "Inter", sans-serif;
 }
 
+/* LAYOUT */
 .app {
   display: flex;
   height: 100vh;
 }
 
+/* SIDEBAR */
 .sidebar {
   width: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 20px;
-  gap: 20px;
 }
 
-.role-select {
-  width: 70px;
-  padding: 4px;
-  border-radius: 6px;
-  background: #0f172a;
-  color: white;
-  border: 1px solid #334155;
+/* GLASS */
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
 }
 
+/* DASHBOARD */
 .dashboard {
   flex: 1;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   padding: 10px;
-  min-height: 100vh;
   overflow-y: auto;
-  scroll-behavior: smooth;
 }
 
+/* BACKGROUND */
 .parallax-bg {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
+  inset: 0;
+  z-index: -1;
   background:
     radial-gradient(circle at 20% 30%, rgba(99,102,241,0.25), transparent),
     linear-gradient(135deg, #020617, #0f172a);
 }
 
-.dashboard > * {
-  position: relative;
-  z-index: 1;
-}
-
-.glass {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(18px);
-}
-
+/* HEADER */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
 }
 
-.nav-buttons {
-  display: flex;
-  gap: 10px;
-}
-
+/* NAV */
 .nav-buttons button {
   background: transparent;
   border: 1px solid #334155;
-  color: #e5e7eb;
+  color: white;
   padding: 6px 12px;
   border-radius: 6px;
-  cursor: pointer;
 }
 
-.nav-buttons button:hover {
-  background: #1e293b;
+/* LOGO */
+.logo-img {
+  width: 24px;
 }
 
+/* GRID */
 .topbar {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   gap: 10px;
 }
 
-.stat {
-  background: rgba(255,255,255,0.05);
-  padding: 10px;
-  border-radius: 12px;
-}
-
 .content {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
   gap: 10px;
-  align-items: start;
 }
 
-.left, .center, .right {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.hero { height: 200px; }
-.list { max-height: 300px; overflow-y: auto; }
-
-.pie {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-  100% { transform: translateY(0px); }
-}
-
-.pie canvas {
-  animation: spin 10s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.form { max-height: 300px; overflow-y: auto; }
-
+/* CARD */
 .card {
-  background: rgba(255,255,255,0.05);
   padding: 10px;
   border-radius: 14px;
-  opacity: 0;
-  transform: translateY(30px);
-  transition: 0.4s;
+  transition: all 0.3s ease;
 }
 
-.card.show {
+/* 🔥 FOCUS BLUR EFFECT */
+.content:hover .card {
+  filter: blur(2px);
+  opacity: 0.6;
+  transform: scale(0.98);
+}
+
+.content .card:hover {
+  filter: blur(0);
   opacity: 1;
-  transform: translateY(0);
+  transform: scale(1.02);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 0 25px rgba(99,102,241,0.4);
+  z-index: 2;
 }
 
-.glow-card:hover {
-  box-shadow: 0 0 20px rgba(99,102,241,0.4);
+/* FILTER */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.content:hover .card:not(:hover) {
-  filter: blur(3px);
+input, select {
+  padding: 6px;
+  border-radius: 6px;
+  background: #0f172a;
+  color: white;
+  border: none;
 }
 
+/* FADE */
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* CURSOR GLOW */
 .cursor-glow {
   position: fixed;
   width: 200px;
@@ -327,25 +346,9 @@ onMounted(() => {
   background: radial-gradient(circle, rgba(99,102,241,0.3), transparent);
   filter: blur(60px);
   pointer-events: none;
-  transform: translate(-50%, -50%);
 }
 
-.ticker {
-  position: relative;
-  z-index: 2;
-  margin: 8px 0;
-}
-
-.title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-img {
-  width: 32px;
-}
-
+/* RESPONSIVE */
 @media (max-width: 900px) {
   .sidebar { display: none; }
   .content {
@@ -353,5 +356,4 @@ onMounted(() => {
     flex-direction: column;
   }
 }
-
 </style>
