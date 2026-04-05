@@ -1,0 +1,25 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* FULLSCREEN FIX */
+html, body, #app {
+  height: 100%;
+  width: 100%;
+  background: #020617;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+  color: #e2e8f0;
+}
+
+/* SCROLL */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 10px;
+}
