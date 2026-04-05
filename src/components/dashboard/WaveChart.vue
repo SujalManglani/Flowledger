@@ -1,95 +1,74 @@
 <script setup>
-import { Line } from "vue-chartjs";
-import {
-  Chart as ChartJS,
-  LineElement,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  Tooltip,
-  Filler
-} from "chart.js";
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 
-ChartJS.register(
-  LineElement,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  Tooltip,
-  Filler
-);
+const canvasRef = ref(null);
 
-const props = defineProps({ transactions: Array });
-
-/* ANIMATION STATE */
-const animatedData = ref([]);
-
-/* PREPARE DATA */
-const baseData = computed(() => props.transactions.map(t => t.amount));
-
-/* FLOWING EFFECT */
 onMounted(() => {
-  animatedData.value = [...baseData.value];
+  const canvas = canvasRef.value;
+  const ctx = canvas.getContext("2d");
 
-  setInterval(() => {
-    if (baseData.value.length > 0) {
-      const newData = [...animatedData.value];
-      newData.push(baseData.value[Math.floor(Math.random() * baseData.value.length)]);
-      newData.shift(); // remove first → creates flowing motion
-      animatedData.value = newData;
+  let width, height;
+  let phase = 0;
+
+  const resize = () => {
+    width = canvas.offsetWidth;
+    height = canvas.offsetHeight;
+    canvas.width = width;
+    canvas.height = height;
+  };
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  const drawWave = (amplitude, frequency, speed, color, offset) => {
+    ctx.beginPath();
+
+    for (let x = 0; x < width; x++) {
+      const y =
+        height / 2 +
+        amplitude *
+          Math.sin((x * frequency) + phase * speed + offset);
+
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
-  }, 1200); // speed (lower = faster)
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  };
+
+  const animate = () => {
+    ctx.clearRect(0, 0, width, height);
+
+    // 🔥 MULTIPLE FLOWING WAVES
+    drawWave(20, 0.02, 1, "#6366f1", 0);       // main
+    drawWave(15, 0.025, 1.5, "#22c55e", 2);    // green
+    drawWave(10, 0.03, 2, "#ec4899", 4);       // pink
+
+    phase += 0.05; // 👉 THIS MAKES IT FLOW HORIZONTALLY
+
+    requestAnimationFrame(animate);
+  };
+
+  animate();
 });
-
-/* CHART DATA */
-const chartData = computed(() => ({
-  labels: animatedData.value.map((_, i) => i),
-  datasets: [
-    {
-      data: animatedData.value,
-
-      /* 🔥 PREMIUM COLOR */
-      borderColor: "#8b5cf6", // purple-blue gradient vibe
-
-      /* 🔥 SMOOTH CURVE */
-      tension: 0.45,
-
-      /* 🔥 CLEAN LOOK */
-      fill: false,
-      borderWidth: 3,
-      pointRadius: 0,
-
-      /* 🔥 GLOW EFFECT */
-      segment: {
-        borderColor: ctx => {
-          const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 600, 0);
-          gradient.addColorStop(0, "#6366f1");
-          gradient.addColorStop(1, "#a78bfa");
-          return gradient;
-        }
-      }
-    }
-  ]
-}));
-
-/* OPTIONS */
-const options = {
-  responsive: true,
-  animation: {
-    duration: 800,
-    easing: "easeInOutQuad"
-  },
-  plugins: {
-    legend: { display: false }
-  },
-  scales: {
-    x: { display: false },
-    y: { display: false }
-  }
-};
 </script>
 
 <template>
-  <Line :data="chartData" :options="options" />
+  <div class="wave-container">
+    <canvas ref="canvasRef"></canvas>
+  </div>
 </template>
+
+<style scoped>
+.wave-container {
+  width: 100%;
+  height: 200px;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+}
+</style>
