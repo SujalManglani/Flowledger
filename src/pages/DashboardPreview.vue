@@ -33,7 +33,6 @@ const total = computed(() =>
   transactions.value.reduce((s, t) => s + t.amount, 0)
 );
 
-/* ROLE */
 const role = ref("admin");
 
 /* FILTERS */
@@ -86,7 +85,6 @@ const topCategory = computed(() => {
   return Object.keys(map).reduce((a, b) => (map[a] > map[b] ? a : b), "None");
 });
 
-/* COUNTER */
 const animatedTotal = ref(0);
 
 onMounted(() => {
@@ -103,7 +101,6 @@ onMounted(() => {
     }
   }, 25);
 
-  /* CURSOR GLOW */
   window.addEventListener("mousemove", (e) => {
     const glow = document.querySelector(".cursor-glow");
     if (glow) {
@@ -119,47 +116,49 @@ onMounted(() => {
 
   <div class="cursor-glow"></div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar glass">
-    <div class="logo">F</div>
-
-    <select v-model="role" class="role-select">
-      <option value="admin">Admin</option>
-      <option value="viewer">Viewer</option>
-    </select>
-  </div>
-
   <div class="dashboard">
 
-    <!-- BACKGROUND -->
     <div class="parallax-bg"></div>
 
-    <!-- HEADER -->
-    <div class="header glass fade-in">
-      <div class="title">
-        <img :src="logo" class="logo-img" />
-        <h1>Flowledger</h1>
+    <!-- 🔥 HEADER -->
+    <div class="header glass">
+
+      <!-- LEFT -->
+      <div class="header-left">
+        <h2>Flowledger</h2>
       </div>
 
-      <div class="nav-buttons">
+      <!-- CENTER -->
+      <div class="header-center">
+        <img :src="logo" class="logo-img" />
+      </div>
+
+      <!-- RIGHT -->
+      <div class="header-right">
         <button>Home</button>
         <button>Reports</button>
         <button>Settings</button>
+
+        <!-- ROLE HERE -->
+        <select v-model="role" class="role-select">
+          <option value="admin">Admin</option>
+          <option value="viewer">Viewer</option>
+        </select>
       </div>
+
     </div>
 
-    <div class="ticker fade-in">
+    <div class="ticker">
       <Ticker :transactions="transactions" />
     </div>
 
-    <div class="topbar fade-in">
+    <div class="topbar">
       <div class="stat glass">₹{{ animatedTotal }}<p>Total</p></div>
       <div class="stat glass">{{ transactions.length }}<p>Transactions</p></div>
       <div class="stat glass">Active<p>Status</p></div>
     </div>
 
-    <!-- FILTER -->
-    <div class="card glass filter-bar fade-in">
+    <div class="card glass filter-bar">
       <input v-model="searchQuery" placeholder="Search..." />
       <select v-model="selectedCategory">
         <option v-for="cat in categories" :key="cat">{{ cat }}</option>
@@ -175,19 +174,24 @@ onMounted(() => {
     <div class="content">
 
       <div class="left">
-        <div class="card glass fade-in">
+        <div class="card glass strong">
           <h3>📊 Insights</h3>
           <p>Top Category: {{ topCategory }}</p>
           <p>Total Spent: ₹{{ total }}</p>
         </div>
+
+        <div class="card glass strong">
+          <h3>🔥 Highlights</h3>
+          <p>Most Active Category: {{ topCategory }}</p>
+        </div>
       </div>
 
       <div class="center">
-        <div class="card glass fade-in">
+        <div class="card glass">
           <WaveChart :transactions="transactions" />
         </div>
 
-        <div class="card glass fade-in">
+        <div class="card glass">
           <TransactionList
             :transactions="filteredTransactions"
             :role="role"
@@ -197,16 +201,17 @@ onMounted(() => {
       </div>
 
       <div class="right">
-        <div class="card glass fade-in">
+        <div class="card glass">
           <CategoryChart :transactions="transactions" />
         </div>
 
-        <div class="card glass fade-in" v-show="role === 'admin'">
+        <div class="card glass" v-show="role === 'admin'">
           <AddTransactionForm @add="addTransaction" />
         </div>
       </div>
 
     </div>
+
   </div>
 </div>
 </template>
@@ -214,36 +219,118 @@ onMounted(() => {
 <style scoped>
 :global(body) {
   margin: 0;
-  background: #020617;
+  background: radial-gradient(circle at 20% 20%, #0f172a, #020617);
   color: #e5e7eb;
-}
-
-/* LAYOUT */
-.app {
-  display: flex;
-  height: 100vh;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 20px;
-}
-
-/* GLASS */
-.glass {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(12px);
 }
 
 /* DASHBOARD */
 .dashboard {
-  flex: 1;
-  padding: 10px;
+  padding: 15px;
+  height: 100vh;
   overflow-y: auto;
+}
+
+/* HEADER */
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 8px 15px;
+  margin-bottom: 10px;
+}
+
+.header-left { justify-self: start; }
+.header-center { justify-self: center; }
+.header-right {
+  justify-self: end;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* LOGO */
+.logo-img {
+  width: 45px;
+}
+
+/* ROLE */
+.role-select {
+  padding: 5px;
+  border-radius: 6px;
+  background: #020617;
+  color: white;
+  border: 1px solid #334155;
+}
+
+/* NAV */
+.header-right button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid #334155;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+/* GLASS */
+.glass {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* GRID */
+.topbar {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+}
+
+/* CARD */
+.card {
+  padding: 12px;
+  border-radius: 14px;
+  transition: all 0.3s ease;
+}
+
+/* LEFT */
+.strong {
+  box-shadow: 0 0 25px rgba(99,102,241,0.25);
+}
+
+/* BLUR EFFECT */
+.content:hover .card {
+  filter: blur(2px);
+  opacity: 0.6;
+}
+
+.content .card:hover {
+  filter: blur(0);
+  opacity: 1;
+  transform: scale(1.03);
+  box-shadow: 0 0 30px rgba(99,102,241,0.5);
+}
+
+/* FILTER */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+/* INPUT */
+input, select {
+  padding: 5px;
+  border-radius: 6px;
+  background: #020617;
+  color: white;
+  border: 1px solid #334155;
 }
 
 /* BACKGROUND */
@@ -252,108 +339,16 @@ onMounted(() => {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(circle at 20% 30%, rgba(99,102,241,0.25), transparent),
+    radial-gradient(circle at 20% 30%, rgba(99,102,241,0.3), transparent),
     linear-gradient(135deg, #020617, #0f172a);
 }
 
-/* HEADER */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* NAV */
-.nav-buttons button {
-  background: transparent;
-  border: 1px solid #334155;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-}
-
-/* LOGO */
-.logo-img {
-  width: 24px;
-}
-
-/* GRID */
-.topbar {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 10px;
-}
-
-.content {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  gap: 10px;
-}
-
-/* CARD */
-.card {
-  padding: 10px;
-  border-radius: 14px;
-  transition: all 0.3s ease;
-}
-
-/* 🔥 FOCUS BLUR EFFECT */
-.content:hover .card {
-  filter: blur(2px);
-  opacity: 0.6;
-  transform: scale(0.98);
-}
-
-.content .card:hover {
-  filter: blur(0);
-  opacity: 1;
-  transform: scale(1.02);
-  backdrop-filter: blur(22px);
-  box-shadow: 0 0 25px rgba(99,102,241,0.4);
-  z-index: 2;
-}
-
-/* FILTER */
-.filter-bar {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-input, select {
-  padding: 6px;
-  border-radius: 6px;
-  background: #0f172a;
-  color: white;
-  border: none;
-}
-
-/* FADE */
-.fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* CURSOR GLOW */
+/* CURSOR */
 .cursor-glow {
   position: fixed;
   width: 200px;
   height: 200px;
   background: radial-gradient(circle, rgba(99,102,241,0.3), transparent);
   filter: blur(60px);
-  pointer-events: none;
-}
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .sidebar { display: none; }
-  .content {
-    display: flex;
-    flex-direction: column;
-  }
 }
 </style>
