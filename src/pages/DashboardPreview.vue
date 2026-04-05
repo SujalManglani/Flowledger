@@ -250,7 +250,7 @@ onMounted(() => {
 
 /* LOGO */
 .logo-img {
-  width: 45px;
+  width: 70px;
 }
 
 /* ROLE */
