@@ -45,7 +45,7 @@ A modern finance dashboard built using Vue.js with role-based access, interactiv
 - CSS (Glassmorphism + Animations)
 
 ----
-live demo link: https://flowledger-one.vercel.app/
+live demo link: 
 github repo link: https://github.com/SujalManglani/Flowledger.git
 
 ---
@@ -62,9 +62,16 @@ Only view data (no changes allowed)
 ----
 
 Screenshots
-<img width="1919" height="866" alt="flowledger" src="https://github.com/user-attachments/assets/bde1d6ee-7674-4795-b50c-caa941faacb4" />
-<img width="1893" height="864" alt="dashboard" src="https://github.com/user-attachments/assets/508cadb3-7ce2-4261-b4d2-c52519f56fbd" />
-<img width="1897" height="864" alt="piechart" src="https://github.com/user-attachments/assets/afebbabd-31c0-4ad7-b0fe-d504d88e68cd" />
+<img width="1919" height="866" alt="flowledger" src="https://github.com/user-attachments/assets/b17e3cfa-8ff1-4361-93ff-a4c0f4179b56" />
+<img width="1900" height="862" alt="dashboard" src="https://github.com/user-attachments/assets/d67c062f-03f6-4348-86f9-b0e0b31e8804" />
+<img width="1895" height="858" alt="piechart" src="https://github.com/user-attachments/assets/91d76e07-3f66-4e54-99a2-08a9fd00ea74" />
+<img width="1898" height="858" alt="waveflow" src="https://github.com/user-attachments/assets/3b6a1c4d-17ad-4391-85e3-1c6cf0712b65" />
+
+
+
+
+
+
 
 
 
