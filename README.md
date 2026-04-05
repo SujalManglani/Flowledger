@@ -41,7 +41,7 @@ A modern finance dashboard built using Vue.js with role-based access, interactiv
  CSS (Glassmorphism + Animations)
 
  Live demo link: https://flowledger-green.vercel.app/
- Github repo link: 
+ Github repo link: https://github.com/SujalManglani/Flowledger.git
 
 Screenshots
 <img width="1919" height="866" alt="flowledger" src="https://github.com/user-attachments/assets/3e7c84fa-8164-4c7d-abaa-072d1fcf3545" />
